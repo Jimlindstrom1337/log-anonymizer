@@ -2,31 +2,29 @@ from faker import Faker
 import random
 
 fake = Faker("sv_SE")
-_cache = {}
 
 
-def _cached(key, generator):
-    if key not in _cache:
-        _cache[key] = generator()
-    return _cache[key]
+def replace(entity_type, original, lexicon):
+    if lexicon.has(original):
+        return lexicon.get(original)["replacement"]
+
+    value = _generate(entity_type)
+    lexicon.set(original, value, entity_type)
+    return value
 
 
-def reset_cache():
-    _cache.clear()
-
-
-def replace(entity_type, original):
+def _generate(entity_type):
     if entity_type == "personnummer":
-        return _cached(original, _fake_personnummer)
+        return _fake_personnummer()
     if entity_type == "email":
-        return _cached(original, lambda: fake.email())
+        return fake.email()
     if entity_type == "phone":
-        return _cached(original, lambda: fake.phone_number())
+        return fake.phone_number()
     if entity_type == "ip_address":
-        return _cached(original, _fake_ip)
+        return _fake_ip()
     if entity_type == "ipv6":
-        return _cached(original, lambda: fake.ipv6())
-    return original
+        return fake.ipv6()
+    return "REDACTED"
 
 
 def _fake_personnummer():

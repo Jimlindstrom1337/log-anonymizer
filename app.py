@@ -19,7 +19,7 @@ with col1:
 with col2:
     st.subheader("Anonymiserad logg")
     if input_text.strip():
-        output_text, replacements = anonymize(input_text)
+        output_text, lexicon = anonymize(input_text)
         st.text_area(
             "Resultat",
             value=output_text,
@@ -36,18 +36,18 @@ with col2:
         st.text_area("Resultat", value="", height=400, label_visibility="collapsed")
 
 if input_text.strip():
-    _, replacements = anonymize(input_text, reset=False)
-    if replacements:
+    entries = lexicon.entries()
+    if entries:
         st.divider()
-        st.subheader(f"Detekterade {len(replacements)} känsliga värden")
+        st.subheader(f"Lexikon — {len(entries)} ersättningar")
         cols = st.columns([1, 2, 2])
         cols[0].markdown("**Typ**")
         cols[1].markdown("**Original**")
         cols[2].markdown("**Ersatt med**")
-        for r in replacements:
+        for entry in entries:
             c1, c2, c3 = st.columns([1, 2, 2])
-            c1.write(r["type"])
-            c2.code(r["original"])
-            c3.code(r["replacement"])
+            c1.write(entry["type"])
+            c2.code(entry["original"])
+            c3.code(entry["replacement"])
     else:
         st.info("Ingen känslig data hittades i texten.")
