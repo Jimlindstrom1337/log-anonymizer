@@ -14,13 +14,20 @@ PATTERNS = {
         r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b"
     ),
     "phone": re.compile(
-        r"\b(\+46[\s\-]?|0)[\d\s\-]{7,12}\b"
+        r"\+46\d{8,10}(?=\b|@)"
+        r"|(?<!\w)0[\d\s\-]{7,12}\b"
+        r"|(?<=:)u\d{7,12}(?=[@:\s/])"
     ),
     "ip_address": re.compile(
         r"\b(?:\d{1,3}\.){3}\d{1,3}\b"
     ),
     "ipv6": re.compile(
         r"\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b"
+    ),
+    "unique_id": re.compile(
+        r"(?<=LID:)[A-Za-z0-9_\-]+"
+        r"|(?<=Call-ID: )[A-Za-z0-9_\-]+"
+        r"|(?<=X-Tvx-Lid: )[A-Za-z0-9_\-]+"
     ),
 }
 
