@@ -27,6 +27,7 @@ TYPE_CHIP = {
     "Personnummer":  ("#92400E", "#FCD34D"),   # amber
     "IP-adress":     ("#991B1B", "#FCA5A5"),   # red
     "IPv6":          ("#9D174D", "#F9A8D4"),   # pink
+    "UniqueID":      ("#065F46", "#6EE7B7"),   # teal
 }
 TYPE_LABELS = {
     "phone": "Telefon",
@@ -34,6 +35,7 @@ TYPE_LABELS = {
     "personnummer": "Personnummer",
     "ip_address": "IP-adress",
     "ipv6": "IPv6",
+    "unique_id": "UniqueID",
 }
 
 ctk.set_appearance_mode("Dark")
@@ -312,7 +314,9 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
         self._build_table_header()
 
     def _populate_table(self, entries):
-        for i, e in enumerate(entries, start=1):
+        seen = set()
+        unique_entries = [e for e in entries if not (e["original"] in seen or seen.add(e["original"]))]
+        for i, e in enumerate(unique_entries, start=1):
             bg = TV_ROW_B if i % 2 == 0 else TV_ROW_A
             label = TYPE_LABELS.get(e["type"], e["type"])
             chip_bg, chip_fg = TYPE_CHIP.get(label, (TV_PANEL_ALT, TV_TEXT))

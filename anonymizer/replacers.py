@@ -36,4 +36,7 @@ def _make_placeholder(entity_type, original, idx, total):
     if entity_type in ("ip_address", "ipv6"):
         return f"[IP-adress {idx}]"
 
+    if entity_type == "unique_id":
+        return f"[UniqueID {idx}]"
+
     return f"[{entity_type} {idx}]"
