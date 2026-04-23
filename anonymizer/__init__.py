@@ -1,2 +1,2 @@
-from .engine import anonymize
+from .engine import anonymize, deanonymize
 from .lexicon import Lexicon

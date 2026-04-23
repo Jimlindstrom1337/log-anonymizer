@@ -1,39 +1,48 @@
-from faker import Faker
-import random
+import re
 
-fake = Faker("sv_SE")
-
-
-def replace(entity_type, original, lexicon):
-    if lexicon.has(original):
-        return lexicon.get(original)["replacement"]
-
-    value = _generate(entity_type)
-    lexicon.set(original, value, entity_type)
-    return value
+PHONE_LETTERS = [chr(65 + i) for i in range(26)]  # A, B, C...
 
 
-def _generate(entity_type):
-    if entity_type == "personnummer":
-        return _fake_personnummer()
-    if entity_type == "email":
-        return fake.email()
+def assign_placeholders(matches):
+    """Return a dict mapping original → placeholder for all unique originals."""
+    seen = set()
+    type_counts = {}
+    for _, _, entity_type, original in matches:
+        if original not in seen:
+            seen.add(original)
+            type_counts[entity_type] = type_counts.get(entity_type, 0) + 1
+
+    mapping = {}
+    type_indices = {}
+    for _, _, entity_type, original in matches:
+        if original in mapping:
+            continue
+        idx = type_indices.get(entity_type, 0) + 1
+        type_indices[entity_type] = idx
+        total = type_counts[entity_type]
+        mapping[original] = _make_placeholder(entity_type, original, idx, total)
+
+    return mapping
+
+
+def _personnummer_correct(original):
+    return len(re.sub(r'\D', '', original)) == 12
+
+
+def _make_placeholder(entity_type, original, idx, total):
     if entity_type == "phone":
-        return fake.phone_number()
-    if entity_type == "ip_address":
-        return _fake_ip()
-    if entity_type == "ipv6":
-        return fake.ipv6()
-    return "REDACTED"
+        label = PHONE_LETTERS[idx - 1] if idx - 1 < len(PHONE_LETTERS) else str(idx)
+        return f"[{label}-part]"
 
+    if entity_type == "personnummer":
+        status = "Korrekt" if _personnummer_correct(original) else "Fel"
+        base = f"Personnummer - {status}"
+        return f"[{base}]" if total == 1 else f"[{base} {idx}]"
 
-def _fake_personnummer():
-    year = random.randint(1950, 2000)
-    month = random.randint(1, 12)
-    day = random.randint(1, 28)
-    suffix = random.randint(1000, 9999)
-    return f"{year % 100:02d}{month:02d}{day:02d}-{suffix}"
+    if entity_type == "email":
+        return "[E-post]" if total == 1 else f"[E-post {idx}]"
 
+    if entity_type in ("ip_address", "ipv6"):
+        return "[IP-adress]" if total == 1 else f"[IP-adress {idx}]"
 
-def _fake_ip():
-    return f"10.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(1,254)}"
+    return f"[{entity_type}]"
