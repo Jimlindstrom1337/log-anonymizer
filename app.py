@@ -1,6 +1,9 @@
 import os
 import threading
 import tkinter.filedialog as fd
+import random
+import math
+import tkinter as tk
 
 import customtkinter as ctk
 from tkinterdnd2 import TkinterDnD, DND_FILES
@@ -61,6 +64,61 @@ def ghost_btn(parent, text, command, width=160, state="normal"):
     )
 
 
+class ConfettiOverlay:
+    """Confetti bursting from the Invest button using tiny per-particle Frame
+    widgets — no blocking canvas, so the rest of the UI stays fully interactive."""
+
+    COLORS = ["#FF1744", "#F50057", "#00BCD4", "#2EC266", "#FFD600", "#FF6F00", "#9C27B0"]
+
+    def __init__(self, parent, origin_widget):
+        self.parent = parent
+        self.running = True
+        self.particles = []
+
+        parent.update()
+        bx = origin_widget.winfo_rootx() - parent.winfo_rootx() + origin_widget.winfo_width() // 2
+        by = origin_widget.winfo_rooty() - parent.winfo_rooty() + origin_widget.winfo_height() // 2
+
+        for _ in range(35):
+            size = random.randint(4, 8)
+            widget = tk.Frame(parent, bg=random.choice(self.COLORS), width=size, height=size)
+            widget.place(x=bx, y=by)
+            self.particles.append({
+                'w': widget,
+                'x': float(bx), 'y': float(by),
+                'vx': random.uniform(-5, 5),
+                'vy': random.uniform(-7, 1),
+                'wobble': random.uniform(0, math.pi * 2),
+                'wobble_speed': random.uniform(0.05, 0.15),
+            })
+
+        self._win_h = parent.winfo_height()
+        self._animate()
+        parent.after(3000, self._close)
+
+    def _animate(self):
+        if not self.running:
+            return
+        for p in self.particles:
+            p['x'] += p['vx']
+            p['y'] += p['vy']
+            p['vy'] += 0.18
+            p['wobble'] += p['wobble_speed']
+            p['vx'] += math.sin(p['wobble']) * 0.15
+            if p['y'] < self._win_h + 20:
+                p['w'].place(x=int(p['x']), y=int(p['y']))
+        self.parent.after(30, self._animate)
+
+    def _close(self):
+        self.running = False
+        for p in self.particles:
+            try:
+                p['w'].destroy()
+            except Exception:
+                pass
+        self.particles.clear()
+
+
 DESKTOP = os.path.join(os.path.expanduser("~"), "Desktop")
 
 
@@ -81,6 +139,9 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
 
         self._build_header()
         self._build_tabs()
+
+    def _show_confetti(self):
+        ConfettiOverlay(self, self._invest_btn)
 
     # ── Header ─────────────────────────────────────────────────────────────
 
@@ -108,6 +169,22 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
             text_color=TV_SUBTEXT,
             anchor="e",
         ).grid(row=0, column=2, padx=20, sticky="e")
+
+        # "Invest in Telavox Coin" button
+        invest_btn = ctk.CTkButton(
+            header,
+            text="💰 Invest in Telavox Coin",
+            command=self._show_confetti,
+            font=("Inter", 10, "bold"),
+            fg_color="#FFD600",
+            hover_color="#FFC600",
+            text_color="#000000",
+            corner_radius=6,
+            width=180,
+            height=32,
+        )
+        invest_btn.grid(row=0, column=3, padx=(0, 12), pady=16)
+        self._invest_btn = invest_btn
 
     # ── Tabs ───────────────────────────────────────────────────────────────
 
