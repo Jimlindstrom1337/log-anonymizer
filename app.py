@@ -11,15 +11,33 @@ from tkinterdnd2 import TkinterDnD, DND_FILES
 from anonymizer import anonymize, deanonymize, Lexicon
 
 # ── Telavox brand palette ──────────────────────────────────────────────────
-TV_GREEN       = "#2EC266"
-TV_GREEN_HOVER = "#25A556"
-TV_BG          = "#1A1E2C"
-TV_PANEL       = "#242838"
-TV_PANEL_ALT   = "#2C3146"
-TV_TEXT        = "#FFFFFF"
-TV_SUBTEXT     = "#9AA0B4"
-TV_ROW_A       = "#262B3C"
-TV_ROW_B       = "#2A3050"
+TV_GREEN        = "#2EC266"
+TV_GREEN_HOVER  = "#25A556"
+TV_BG           = "#1A1E2C"
+TV_PANEL        = "#242838"
+TV_PANEL_ALT    = "#2C3146"
+TV_DROP_IDLE    = "#2C3146"
+TV_DROP_ACTIVE  = "#1E3D2F"   # green-tinted glow when dragging over
+TV_TEXT         = "#FFFFFF"
+TV_SUBTEXT      = "#9AA0B4"
+TV_ROW_A        = "#262B3C"
+TV_ROW_B        = "#2A3050"
+
+# Type chip colors
+TYPE_CHIP = {
+    "Telefon":       ("#1D4ED8", "#93C5FD"),   # blue
+    "E-post":        ("#6D28D9", "#C4B5FD"),   # purple
+    "Personnummer":  ("#92400E", "#FCD34D"),   # amber
+    "IP-adress":     ("#991B1B", "#FCA5A5"),   # red
+    "IPv6":          ("#9D174D", "#F9A8D4"),   # pink
+}
+TYPE_LABELS = {
+    "phone": "Telefon",
+    "email": "E-post",
+    "personnummer": "Personnummer",
+    "ip_address": "IP-adress",
+    "ipv6": "IPv6",
+}
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("green")
@@ -28,42 +46,34 @@ FONT_BODY   = ("Inter", 13)
 FONT_LABEL  = ("Inter", 12)
 FONT_BOLD   = ("Inter", 13, "bold")
 FONT_TITLE  = ("Inter", 22, "bold")
+FONT_CHIP   = ("Inter", 11, "bold")
+
+DESKTOP = os.path.join(os.path.expanduser("~"), "Desktop")
 
 
 def green_btn(parent, text, command, width=160, state="normal"):
     return ctk.CTkButton(
-        parent,
-        text=text,
-        command=command,
-        width=width,
-        height=36,
-        state=state,
-        font=FONT_BOLD,
-        fg_color=TV_GREEN,
-        hover_color=TV_GREEN_HOVER,
-        text_color=TV_TEXT,
-        corner_radius=8,
+        parent, text=text, command=command, width=width, height=36,
+        state=state, font=FONT_BOLD,
+        fg_color=TV_GREEN, hover_color=TV_GREEN_HOVER,
+        text_color=TV_TEXT, corner_radius=8,
     )
 
 
 def ghost_btn(parent, text, command, width=160, state="normal"):
     return ctk.CTkButton(
-        parent,
-        text=text,
-        command=command,
-        width=width,
-        height=36,
-        state=state,
-        font=FONT_LABEL,
-        fg_color=TV_PANEL_ALT,
-        hover_color=TV_PANEL,
-        text_color=TV_TEXT,
-        border_width=1,
-        border_color=TV_GREEN,
+        parent, text=text, command=command, width=width, height=36,
+        state=state, font=FONT_LABEL,
+        fg_color=TV_PANEL_ALT, hover_color=TV_PANEL,
+        text_color=TV_TEXT, border_width=1, border_color=TV_GREEN,
         corner_radius=8,
     )
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> eb39c2ce9020ba92d7b18f5aeaee8e62fdff645a
 class ConfettiOverlay:
     """Confetti bursting from the Invest button using tiny per-particle Frame
     widgets — no blocking canvas, so the rest of the UI stays fully interactive."""
@@ -117,9 +127,12 @@ class ConfettiOverlay:
             except Exception:
                 pass
         self.particles.clear()
+<<<<<<< HEAD
 
 
 DESKTOP = os.path.join(os.path.expanduser("~"), "Desktop")
+=======
+>>>>>>> eb39c2ce9020ba92d7b18f5aeaee8e62fdff645a
 
 
 class App(ctk.CTk, TkinterDnD.DnDWrapper):
@@ -127,12 +140,13 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
         super().__init__(fg_color=TV_BG)
         self.TkdndVersion = TkinterDnD._require(self)
         self.title("Telavox — Log Anonymizer")
-        self.geometry("800x620")
-        self.minsize(600, 480)
+        self.geometry("800x640")
+        self.minsize(600, 500)
 
         self._output_text = None
         self._selected_file = None
         self._lexicon = Lexicon()
+        self._animating = False
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
@@ -151,23 +165,17 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
         header.grid_propagate(False)
         header.grid_columnconfigure(1, weight=1)
 
-        dot = ctk.CTkFrame(header, width=10, height=10, fg_color=TV_GREEN, corner_radius=5)
-        dot.grid(row=0, column=0, padx=(20, 8), pady=20)
+        dot = ctk.CTkFrame(header, width=12, height=12, fg_color=TV_GREEN, corner_radius=6)
+        dot.grid(row=0, column=0, padx=(20, 10), pady=20)
 
         ctk.CTkLabel(
-            header,
-            text="Log Anonymizer",
-            font=FONT_TITLE,
-            text_color=TV_TEXT,
-            anchor="w",
+            header, text="Log Anonymizer",
+            font=FONT_TITLE, text_color=TV_TEXT, anchor="w",
         ).grid(row=0, column=1, sticky="w")
 
         ctk.CTkLabel(
-            header,
-            text="Ingen data lämnar din maskin",
-            font=FONT_LABEL,
-            text_color=TV_SUBTEXT,
-            anchor="e",
+            header, text="Ingen data lämnar din maskin",
+            font=FONT_LABEL, text_color=TV_SUBTEXT, anchor="e",
         ).grid(row=0, column=2, padx=20, sticky="e")
 
         # "Invest in Telavox Coin" button
@@ -189,7 +197,7 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
     # ── Tabs ───────────────────────────────────────────────────────────────
 
     def _build_tabs(self):
-        tabs = ctk.CTkTabview(
+        self._tabs = ctk.CTkTabview(
             self,
             fg_color=TV_PANEL,
             segmented_button_fg_color=TV_PANEL_ALT,
@@ -200,13 +208,13 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
             text_color=TV_TEXT,
             corner_radius=12,
         )
-        tabs.grid(row=1, column=0, sticky="nsew", padx=20, pady=20)
+        self._tabs.grid(row=1, column=0, sticky="nsew", padx=20, pady=20)
 
-        tabs.add("  Anonymisera fil  ")
-        tabs.add("  Återskapa original  ")
+        self._tabs.add("  Anonymisera fil  ")
+        self._tabs.add("  Återskapa original  ")
 
-        self._build_anonymize_tab(tabs.tab("  Anonymisera fil  "))
-        self._build_restore_tab(tabs.tab("  Återskapa original  "))
+        self._build_anonymize_tab(self._tabs.tab("  Anonymisera fil  "))
+        self._build_restore_tab(self._tabs.tab("  Återskapa original  "))
 
     # ── Tab 1 — Anonymisera fil ────────────────────────────────────────────
 
@@ -215,29 +223,36 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(2, weight=1)
 
-        # File picker card
-        card = ctk.CTkFrame(parent, fg_color=TV_PANEL_ALT, corner_radius=10)
-        card.grid(row=0, column=0, sticky="ew", pady=(8, 6))
-        card.grid_columnconfigure(0, weight=1)
+        # Drop zone card
+        self._drop_card = ctk.CTkFrame(
+            parent, fg_color=TV_DROP_IDLE,
+            corner_radius=12, border_width=2, border_color=TV_PANEL_ALT,
+        )
+        self._drop_card.grid(row=0, column=0, sticky="ew", pady=(8, 6))
+        self._drop_card.grid_columnconfigure(0, weight=1)
+
+        self._drop_icon = ctk.CTkLabel(
+            self._drop_card, text="↓", font=("Inter", 28, "bold"),
+            text_color=TV_SUBTEXT, width=40,
+        )
+        self._drop_icon.grid(row=0, column=0, padx=(16, 0), pady=16, sticky="w")
 
         self._file_label = ctk.CTkLabel(
-            card,
+            self._drop_card,
             text="Dra hit en fil  —  eller klicka Välj fil…",
-            anchor="w",
-            font=FONT_BODY,
-            text_color=TV_SUBTEXT,
+            anchor="w", font=FONT_BODY, text_color=TV_SUBTEXT,
         )
-        self._file_label.grid(row=0, column=0, sticky="ew", padx=16, pady=14)
+        self._file_label.grid(row=0, column=1, sticky="ew", padx=8, pady=16)
 
-        ghost_btn(card, "Välj fil…", self._browse, width=120).grid(
-            row=0, column=1, padx=(0, 12), pady=12
+        ghost_btn(self._drop_card, "Välj fil…", self._browse, width=120).grid(
+            row=0, column=2, padx=(0, 14), pady=14,
         )
 
-        # drag-and-drop
-        card.drop_target_register(DND_FILES)
-        card.dnd_bind("<<Drop>>", self._on_drop)
-        self._file_label.drop_target_register(DND_FILES)
-        self._file_label.dnd_bind("<<Drop>>", self._on_drop)
+        for widget in (self._drop_card, self._file_label, self._drop_icon):
+            widget.drop_target_register(DND_FILES)
+            widget.dnd_bind("<<Drop>>", self._on_drop)
+            widget.dnd_bind("<<DragEnter>>", self._on_drag_enter)
+            widget.dnd_bind("<<DragLeave>>", self._on_drag_leave)
 
         # Action row
         action = ctk.CTkFrame(parent, fg_color="transparent")
@@ -248,17 +263,15 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
         self._run_btn.grid(row=0, column=0, padx=(0, 14))
 
         self._progress = ctk.CTkProgressBar(
-            action,
-            height=8,
-            corner_radius=4,
-            fg_color=TV_PANEL_ALT,
-            progress_color=TV_GREEN,
+            action, height=8, corner_radius=4,
+            fg_color=TV_PANEL_ALT, progress_color=TV_GREEN,
         )
         self._progress.grid(row=0, column=1, sticky="ew")
         self._progress.set(0)
 
         self._anon_status = ctk.CTkLabel(
-            action, text="", anchor="e", width=200, font=FONT_LABEL, text_color=TV_SUBTEXT
+            action, text="", anchor="e", width=200,
+            font=FONT_LABEL, text_color=TV_SUBTEXT,
         )
         self._anon_status.grid(row=0, column=2, padx=(14, 0))
 
@@ -274,15 +287,32 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
             scrollbar_button_hover_color=TV_GREEN,
         )
         self._table.grid(row=2, column=0, sticky="nsew", pady=(0, 8))
-        self._table.grid_columnconfigure((0, 1, 2), weight=1)
+        self._table.grid_columnconfigure(0, weight=0, minsize=120)
+        self._table.grid_columnconfigure(1, weight=1)
+        self._table.grid_columnconfigure(2, weight=1)
         self._build_table_header()
 
-        # Save button
-        self._save_btn = ghost_btn(parent, "Spara anonymiserad fil…", self._save, width=220, state="disabled")
+        self._save_btn = ghost_btn(
+            parent, "Spara anonymiserad fil…", self._save, width=220, state="disabled"
+        )
         self._save_btn.grid(row=3, column=0, pady=(4, 12))
 
+    # ── Drag-and-drop events ────────────────────────────────────────────────
+
+    def _on_drag_enter(self, event):
+        self._drop_card.configure(
+            fg_color=TV_DROP_ACTIVE, border_color=TV_GREEN
+        )
+        self._drop_icon.configure(text_color=TV_GREEN)
+
+    def _on_drag_leave(self, event):
+        self._drop_card.configure(
+            fg_color=TV_DROP_IDLE, border_color=TV_PANEL_ALT
+        )
+        self._drop_icon.configure(text_color=TV_SUBTEXT)
+
     def _on_drop(self, event):
-        # Windows wraps paths with spaces in {braces}
+        self._on_drag_leave(event)
         path = event.data.strip().strip("{}")
         self._set_file(path)
 
@@ -293,17 +323,16 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
             initialdir=DESKTOP,
             filetypes=[("Loggfiler", "*.log *.txt *.csv"), ("Alla filer", "*.*")],
         )
-        if not path:
-            return
-        self._set_file(path)
+        if path:
+            self._set_file(path)
 
     def _set_file(self, path):
         if not os.path.isfile(path):
             return
         self._selected_file = path
-        self._file_label.configure(
-            text=f"  {os.path.basename(path)}", text_color=TV_TEXT
-        )
+        self._drop_icon.configure(text="✓", text_color=TV_GREEN)
+        self._file_label.configure(text=f"  {os.path.basename(path)}", text_color=TV_TEXT)
+        self._drop_card.configure(border_color=TV_GREEN)
         self._run_btn.configure(state="normal")
         self._save_btn.configure(state="disabled")
         self._output_text = None
@@ -312,45 +341,56 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
         self._anon_status.configure(text="")
         self._clear_table()
 
+    # ── Processing ─────────────────────────────────────────────────────────
+
     def _start(self):
         self._run_btn.configure(state="disabled")
         self._save_btn.configure(state="disabled")
-        self._anon_status.configure(text="Bearbetar…")
+        self._anon_status.configure(text="Bearbetar…", text_color=TV_SUBTEXT)
         self._progress.set(0)
         self._lexicon = Lexicon()
         self._clear_table()
+        self._animating = True
+        self._animate_progress()
         threading.Thread(target=self._worker, daemon=True).start()
+
+    def _animate_progress(self):
+        if not self._animating:
+            return
+        val = self._progress.get()
+        self._progress.set((val + 0.012) % 1.0)
+        self.after(30, self._animate_progress)
 
     def _worker(self):
         try:
             with open(self._selected_file, encoding="utf-8", errors="replace") as f:
                 text = f.read()
-            self.after(0, lambda: self._progress.set(0.4))
             output, lexicon = anonymize(text, self._lexicon)
             self._output_text = output
             self._lexicon = lexicon
             self.after(0, lambda: self._on_done(lexicon.entries()))
         except Exception as exc:
+            self._animating = False
             self.after(0, lambda: self._anon_status.configure(text=f"Fel: {exc}"))
             self.after(0, lambda: self._run_btn.configure(state="normal"))
 
     def _on_done(self, entries):
+        self._animating = False
         self._progress.set(1.0)
         self._anon_status.configure(
-            text=f"{len(entries)} värden ersatta", text_color=TV_GREEN
+            text=f"✓  {len(entries)} värden ersatta", text_color=TV_GREEN
         )
         self._run_btn.configure(state="normal")
         self._save_btn.configure(state="normal")
         self._populate_table(entries)
 
+    # ── Results table ───────────────────────────────────────────────────────
+
     def _build_table_header(self):
         for col, title in enumerate(["Typ", "Original", "Anonymiserat"]):
             ctk.CTkLabel(
-                self._table,
-                text=title,
-                font=FONT_BOLD,
-                anchor="w",
-                text_color=TV_SUBTEXT,
+                self._table, text=title, font=FONT_BOLD,
+                anchor="w", text_color=TV_SUBTEXT,
             ).grid(row=0, column=col, sticky="ew", padx=10, pady=(6, 4))
 
     def _clear_table(self):
@@ -359,27 +399,22 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
         self._build_table_header()
 
     def _populate_table(self, entries):
-        TYPE_LABELS = {
-            "phone": "Telefon",
-            "email": "E-post",
-            "personnummer": "Personnummer",
-            "ip_address": "IP-adress",
-            "ipv6": "IPv6",
-        }
         for i, e in enumerate(entries, start=1):
             bg = TV_ROW_B if i % 2 == 0 else TV_ROW_A
-            for col, val in enumerate(
-                [TYPE_LABELS.get(e["type"], e["type"]), e["original"], e["replacement"]]
-            ):
+            label = TYPE_LABELS.get(e["type"], e["type"])
+            chip_bg, chip_fg = TYPE_CHIP.get(label, (TV_PANEL_ALT, TV_TEXT))
+
+            ctk.CTkLabel(
+                self._table, text=f"  {label}  ",
+                anchor="center", font=FONT_CHIP,
+                fg_color=chip_bg, text_color=chip_fg, corner_radius=6,
+            ).grid(row=i, column=0, sticky="w", padx=(6, 3), pady=2)
+
+            for col, val in enumerate([e["original"], e["replacement"]], start=1):
                 ctk.CTkLabel(
-                    self._table,
-                    text=val,
-                    anchor="w",
-                    fg_color=bg,
-                    font=FONT_LABEL,
-                    text_color=TV_TEXT,
-                    corner_radius=4,
-                ).grid(row=i, column=col, sticky="ew", padx=3, pady=1)
+                    self._table, text=val, anchor="w",
+                    fg_color=bg, font=FONT_LABEL, text_color=TV_TEXT, corner_radius=4,
+                ).grid(row=i, column=col, sticky="ew", padx=3, pady=2)
 
     def _save(self):
         if not self._output_text:
@@ -395,7 +430,7 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
         if path:
             with open(path, "w", encoding="utf-8") as f:
                 f.write(self._output_text)
-            self._anon_status.configure(text="Sparad ✓", text_color=TV_GREEN)
+            self._anon_status.configure(text="✓  Sparad", text_color=TV_GREEN)
 
     # ── Tab 2 — Återskapa original ─────────────────────────────────────────
 
@@ -408,21 +443,19 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
         ctk.CTkLabel(
             parent,
             text="Klistra in text med anonymiserade värden (t.ex. ett svar från Claude):",
-            anchor="w",
-            font=FONT_LABEL,
-            text_color=TV_SUBTEXT,
+            anchor="w", font=FONT_LABEL, text_color=TV_SUBTEXT,
         ).grid(row=0, column=0, sticky="ew", pady=(10, 4))
 
         self._restore_input = ctk.CTkTextbox(
-            parent,
-            fg_color=TV_PANEL_ALT,
-            text_color=TV_TEXT,
-            font=FONT_BODY,
-            corner_radius=10,
-            border_width=1,
-            border_color=TV_PANEL_ALT,
+            parent, fg_color=TV_PANEL_ALT, text_color=TV_TEXT,
+            font=FONT_BODY, corner_radius=10,
+            border_width=2, border_color=TV_PANEL_ALT,
         )
         self._restore_input.grid(row=1, column=0, sticky="nsew", pady=(0, 8))
+        self._restore_input.bind("<FocusIn>",
+            lambda e: self._restore_input.configure(border_color=TV_GREEN))
+        self._restore_input.bind("<FocusOut>",
+            lambda e: self._restore_input.configure(border_color=TV_PANEL_ALT))
 
         btn_row = ctk.CTkFrame(parent, fg_color="transparent")
         btn_row.grid(row=2, column=0, sticky="ew", pady=4)
@@ -431,26 +464,19 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
         green_btn(btn_row, "Återskapa original", self._restore, width=200).grid(row=0, column=0)
 
         self._restore_status = ctk.CTkLabel(
-            btn_row, text="", anchor="w", font=FONT_LABEL, text_color=TV_SUBTEXT
+            btn_row, text="", anchor="w", font=FONT_LABEL, text_color=TV_SUBTEXT,
         )
         self._restore_status.grid(row=0, column=1, padx=14)
 
         ctk.CTkLabel(
-            parent,
-            text="Text med återställda originalvärden:",
-            anchor="w",
-            font=FONT_LABEL,
-            text_color=TV_SUBTEXT,
+            parent, text="Text med återställda originalvärden:",
+            anchor="w", font=FONT_LABEL, text_color=TV_SUBTEXT,
         ).grid(row=3, column=0, sticky="ew", pady=(8, 4))
 
         self._restore_output = ctk.CTkTextbox(
-            parent,
-            fg_color=TV_PANEL_ALT,
-            text_color=TV_TEXT,
-            font=FONT_BODY,
-            corner_radius=10,
-            border_width=1,
-            border_color=TV_PANEL_ALT,
+            parent, fg_color=TV_PANEL_ALT, text_color=TV_TEXT,
+            font=FONT_BODY, corner_radius=10,
+            border_width=2, border_color=TV_PANEL_ALT,
             state="disabled",
         )
         self._restore_output.grid(row=4, column=0, sticky="nsew", pady=(0, 12))
@@ -458,11 +484,12 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
     def _restore(self):
         text = self._restore_input.get("1.0", "end").strip()
         if not text:
-            self._restore_status.configure(text="Ingen text att återskapa.")
+            self._restore_status.configure(text="Ingen text att återskapa.", text_color=TV_SUBTEXT)
             return
         if not self._lexicon.entries():
             self._restore_status.configure(
-                text="Anonymisera en fil först för att bygga upp lexikonet."
+                text="Anonymisera en fil först för att bygga upp lexikonet.",
+                text_color=TV_SUBTEXT,
             )
             return
         result = deanonymize(text, self._lexicon)
@@ -470,7 +497,7 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
         self._restore_output.delete("1.0", "end")
         self._restore_output.insert("1.0", result)
         self._restore_output.configure(state="disabled")
-        self._restore_status.configure(text="Klart ✓", text_color=TV_GREEN)
+        self._restore_status.configure(text="✓  Klart", text_color=TV_GREEN)
 
 
 if __name__ == "__main__":
