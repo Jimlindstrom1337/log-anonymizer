@@ -1,2 +1,2 @@
-streamlit>=1.32.0
+customtkinter>=5.2.0
 faker>=24.0.0
