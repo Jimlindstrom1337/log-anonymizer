@@ -1,5 +1,11 @@
 import re
 
+# MAC addresses are detected only to prevent other patterns from matching them.
+# They are never anonymized.
+_MAC_PATTERN = re.compile(
+    r"\b([0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2}\b"
+)
+
 PATTERNS = {
     "personnummer": re.compile(
         r"\b(\d{6}[-+]\d{4}|\d{8}[-+]\d{4}|\d{10}|\d{12})\b"
@@ -21,12 +27,21 @@ PATTERNS = {
 
 def find_matches(text):
     """Return list of (start, end, entity_type, matched_text) sorted by position."""
+    mac_ranges = [(m.start(), m.end()) for m in _MAC_PATTERN.finditer(text)]
+
     matches = []
     for entity_type, pattern in PATTERNS.items():
         for m in pattern.finditer(text):
+            if _overlaps_mac(m.start(), m.end(), mac_ranges):
+                continue
             matches.append((m.start(), m.end(), entity_type, m.group()))
     matches.sort(key=lambda x: x[0])
     return _remove_overlaps(matches)
+
+
+def _overlaps_mac(start, end, mac_ranges):
+    return any(mac_start <= start < mac_end or mac_start < end <= mac_end
+               for mac_start, mac_end in mac_ranges)
 
 
 def _remove_overlaps(matches):
