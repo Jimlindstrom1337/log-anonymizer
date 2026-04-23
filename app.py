@@ -344,6 +344,40 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
             with open(path, "w", encoding="utf-8") as f:
                 f.write(self._output_text)
             self._anon_status.configure(text="✓  Sparad", text_color=TV_GREEN)
+            self._populate_restore_input()
+            self._tabs.set("  Återskapa original  ")
+
+    def _populate_restore_input(self):
+        tb = self._restore_input._textbox
+
+        # color per type — foreground only, matches chip palette
+        tag_colors = {
+            "phone":        "#93C5FD",
+            "email":        "#C4B5FD",
+            "personnummer": "#FCD34D",
+            "ip_address":   "#FCA5A5",
+            "ipv6":         "#F9A8D4",
+        }
+        for tag, fg in tag_colors.items():
+            tb.tag_configure(tag, foreground=fg)
+
+        self._restore_input.configure(state="normal")
+        self._restore_input.delete("1.0", "end")
+        self._restore_input.insert("1.0", self._output_text)
+
+        for entry in self._lexicon.entries():
+            placeholder = entry["replacement"]
+            tag = entry["type"]
+            if tag not in tag_colors:
+                continue
+            start = "1.0"
+            while True:
+                pos = tb.search(placeholder, start, stopindex="end", exact=True)
+                if not pos:
+                    break
+                end = f"{pos}+{len(placeholder)}c"
+                tb.tag_add(tag, pos, end)
+                start = end
 
     # ── Tab 2 — Återskapa original ─────────────────────────────────────────
 
