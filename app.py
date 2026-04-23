@@ -3,6 +3,7 @@ import threading
 import tkinter.filedialog as fd
 
 import customtkinter as ctk
+from tkinterdnd2 import TkinterDnD, DND_FILES
 
 from anonymizer import anonymize, deanonymize, Lexicon
 
@@ -60,9 +61,13 @@ def ghost_btn(parent, text, command, width=160, state="normal"):
     )
 
 
-class App(ctk.CTk):
+DESKTOP = os.path.join(os.path.expanduser("~"), "Desktop")
+
+
+class App(ctk.CTk, TkinterDnD.DnDWrapper):
     def __init__(self):
         super().__init__(fg_color=TV_BG)
+        self.TkdndVersion = TkinterDnD._require(self)
         self.title("Telavox — Log Anonymizer")
         self.geometry("800x620")
         self.minsize(600, 480)
@@ -140,7 +145,7 @@ class App(ctk.CTk):
 
         self._file_label = ctk.CTkLabel(
             card,
-            text="Välj en loggfil för att börja",
+            text="Dra hit en fil  —  eller klicka Välj fil…",
             anchor="w",
             font=FONT_BODY,
             text_color=TV_SUBTEXT,
@@ -150,6 +155,12 @@ class App(ctk.CTk):
         ghost_btn(card, "Välj fil…", self._browse, width=120).grid(
             row=0, column=1, padx=(0, 12), pady=12
         )
+
+        # drag-and-drop
+        card.drop_target_register(DND_FILES)
+        card.dnd_bind("<<Drop>>", self._on_drop)
+        self._file_label.drop_target_register(DND_FILES)
+        self._file_label.dnd_bind("<<Drop>>", self._on_drop)
 
         # Action row
         action = ctk.CTkFrame(parent, fg_color="transparent")
@@ -193,13 +204,24 @@ class App(ctk.CTk):
         self._save_btn = ghost_btn(parent, "Spara anonymiserad fil…", self._save, width=220, state="disabled")
         self._save_btn.grid(row=3, column=0, pady=(4, 12))
 
+    def _on_drop(self, event):
+        # Windows wraps paths with spaces in {braces}
+        path = event.data.strip().strip("{}")
+        self._set_file(path)
+
     def _browse(self):
         self.update()
         path = fd.askopenfilename(
             parent=self,
+            initialdir=DESKTOP,
             filetypes=[("Loggfiler", "*.log *.txt *.csv"), ("Alla filer", "*.*")],
         )
         if not path:
+            return
+        self._set_file(path)
+
+    def _set_file(self, path):
+        if not os.path.isfile(path):
             return
         self._selected_file = path
         self._file_label.configure(
