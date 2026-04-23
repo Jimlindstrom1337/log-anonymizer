@@ -1,9 +1,13 @@
+import io
+import json
 import os
 import threading
 import tkinter.filedialog as fd
 import random
-import math
 import tkinter as tk
+import urllib.request
+
+from PIL import Image, ImageTk
 
 import customtkinter as ctk
 from tkinterdnd2 import TkinterDnD, DND_FILES
@@ -70,10 +74,6 @@ def ghost_btn(parent, text, command, width=160, state="normal"):
     )
 
 
-<<<<<<< HEAD
-=======
-
->>>>>>> eb39c2ce9020ba92d7b18f5aeaee8e62fdff645a
 class ConfettiOverlay:
     """Confetti bursting from the Invest button using tiny per-particle Frame
     widgets — no blocking canvas, so the rest of the UI stays fully interactive."""
@@ -96,25 +96,22 @@ class ConfettiOverlay:
             self.particles.append({
                 'w': widget,
                 'x': float(bx), 'y': float(by),
-                'vx': random.uniform(-5, 5),
-                'vy': random.uniform(-7, 1),
-                'wobble': random.uniform(0, math.pi * 2),
-                'wobble_speed': random.uniform(0.05, 0.15),
+                'vx': random.uniform(-6, 6),
+                'vy': random.uniform(-7, 0.5),
             })
 
         self._win_h = parent.winfo_height()
         self._animate()
-        parent.after(3000, self._close)
+        parent.after(1500, self._close)
 
     def _animate(self):
         if not self.running:
             return
         for p in self.particles:
+            p['vx'] *= 0.91
+            p['vy'] = p['vy'] * 0.91 + 0.12
             p['x'] += p['vx']
             p['y'] += p['vy']
-            p['vy'] += 0.18
-            p['wobble'] += p['wobble_speed']
-            p['vx'] += math.sin(p['wobble']) * 0.15
             if p['y'] < self._win_h + 20:
                 p['w'].place(x=int(p['x']), y=int(p['y']))
         self.parent.after(30, self._animate)
@@ -127,12 +124,8 @@ class ConfettiOverlay:
             except Exception:
                 pass
         self.particles.clear()
-<<<<<<< HEAD
-
-
-DESKTOP = os.path.join(os.path.expanduser("~"), "Desktop")
-=======
->>>>>>> eb39c2ce9020ba92d7b18f5aeaee8e62fdff645a
+        if getattr(self.parent, '_confetti', None) is self:
+            self.parent._confetti = None
 
 
 class App(ctk.CTk, TkinterDnD.DnDWrapper):
@@ -155,7 +148,71 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
         self._build_tabs()
 
     def _show_confetti(self):
-        ConfettiOverlay(self, self._invest_btn)
+        if getattr(self, '_confetti', None):
+            self._confetti._close()
+        self._confetti = ConfettiOverlay(self, self._invest_btn)
+        threading.Thread(target=self._fetch_meme, daemon=True).start()
+
+    def _fetch_meme(self):
+        try:
+            req = urllib.request.Request(
+                "https://www.reddit.com/r/cryptocurrencymemes/.json?limit=50",
+                headers={"User-Agent": "log-anonymizer-meme/1.0"},
+            )
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                data = json.loads(resp.read())
+
+            posts = data["data"]["children"]
+            image_posts = [
+                p["data"] for p in posts
+                if any(p["data"].get("url", "").lower().endswith(ext)
+                       for ext in (".jpg", ".jpeg", ".png"))
+            ]
+            if not image_posts:
+                return
+
+            post = random.choice(image_posts)
+            img_req = urllib.request.Request(
+                post["url"], headers={"User-Agent": "log-anonymizer-meme/1.0"}
+            )
+            with urllib.request.urlopen(img_req, timeout=6) as resp:
+                raw = resp.read()
+
+            img = Image.open(io.BytesIO(raw))
+            img.thumbnail((420, 380))
+            self.after(0, lambda: self._display_meme(img, post.get("title", "")))
+        except Exception:
+            pass
+
+    def _display_meme(self, img, title):
+        popup = ctk.CTkToplevel(self)
+        popup.title("Telavox Coin Meme")
+        popup.configure(fg_color=TV_PANEL)
+        popup.resizable(False, False)
+        popup.transient(self)
+        popup.grab_set()
+
+        ctk.CTkButton(
+            popup, text="✕", width=32, height=32,
+            fg_color=TV_PANEL_ALT, hover_color="#FF4444",
+            text_color=TV_TEXT, font=FONT_BOLD, corner_radius=6,
+            command=popup.destroy,
+        ).pack(anchor="ne", padx=8, pady=(8, 0))
+
+        ctk.CTkLabel(
+            popup, text=title, wraplength=420,
+            font=FONT_LABEL, text_color=TV_SUBTEXT,
+        ).pack(padx=16, pady=(0, 8))
+
+        photo = ImageTk.PhotoImage(img)
+        lbl = tk.Label(popup, image=photo, bg=TV_PANEL, bd=0)
+        lbl.image = photo
+        lbl.pack(padx=16, pady=(0, 16))
+
+        self.update_idletasks()
+        px = self.winfo_x() + (self.winfo_width() - img.width) // 2
+        py = self.winfo_y() + (self.winfo_height() - img.height) // 2
+        popup.geometry(f"+{px}+{py}")
 
     # ── Header ─────────────────────────────────────────────────────────────
 
