@@ -1,13 +1,9 @@
-import io
-import json
 import os
 import threading
 import tkinter.filedialog as fd
 import random
 import tkinter as tk
-import urllib.request
 
-from PIL import Image, ImageTk
 
 import customtkinter as ctk
 from tkinterdnd2 import TkinterDnD, DND_FILES
@@ -151,47 +147,37 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
         if getattr(self, '_confetti', None):
             self._confetti._close()
         self._confetti = ConfettiOverlay(self, self._invest_btn)
-        threading.Thread(target=self._fetch_meme, daemon=True).start()
+        self._display_meme()
 
-    def _fetch_meme(self):
-        try:
-            req = urllib.request.Request(
-                "https://www.reddit.com/r/cryptocurrencymemes/.json?limit=50",
-                headers={"User-Agent": "log-anonymizer-meme/1.0"},
-            )
-            with urllib.request.urlopen(req, timeout=6) as resp:
-                data = json.loads(resp.read())
+    _MEMES = [
+        ("TELAVOX COIN", "GARANTERAT TILL MÅNEN 🚀"),
+        ("BITCOIN? NEJ TACK", "JAG SATSAR PÅ TELAVOX COIN"),
+        ("NÄR TELAVOX COIN DIPPAR", "DET ÄR BARA EN TILLFÄLLIG REA"),
+        ("MIN INVESTERINGSSTRATEGI", "100% TELAVOX COIN"),
+        ("CHEFEN: VAD GÖR DU?", "JAG KÖPER TELAVOX COIN"),
+        ("TELAVOX COIN IDAG", "FERRARI IMORGON 🏎️"),
+        ("WARREN BUFFETT HADE FEL", "HAN KÖPTE INTE TELAVOX COIN"),
+        ("FAMILJEN: KOM PÅ MIDDAG", "JAG: TELAVOX COIN PUMPAR"),
+        ("ETT LITET KÖP AV TELAVOX COIN", "ÄR DET VERKLIGEN FARLIGT?"),
+        ("NÄR ALLA FRÅGAR OM AKTIER", "DU: HAR NI HÖRT OM TELAVOX COIN?"),
+        ("TELAVOX COIN -50%", "BRA, NU KAN JAG KÖPA MER"),
+        ("SÖMN ÄR FÖR DEM", "SOM INTE ÄGER TELAVOX COIN"),
+    ]
 
-            posts = data["data"]["children"]
-            image_posts = [
-                p["data"] for p in posts
-                if any(p["data"].get("url", "").lower().endswith(ext)
-                       for ext in (".jpg", ".jpeg", ".png"))
-            ]
-            if not image_posts:
-                return
+    def _display_meme(self):
+        top, bottom = random.choice(self._MEMES)
 
-            post = random.choice(image_posts)
-            img_req = urllib.request.Request(
-                post["url"], headers={"User-Agent": "log-anonymizer-meme/1.0"}
-            )
-            with urllib.request.urlopen(img_req, timeout=6) as resp:
-                raw = resp.read()
-
-            img = Image.open(io.BytesIO(raw))
-            img.thumbnail((420, 380))
-            self.after(0, lambda: self._display_meme(img, post.get("title", "")))
-        except Exception:
-            pass
-
-    def _display_meme(self, img, title):
         popup = ctk.CTkToplevel(self)
         popup.title("Telavox Coin Meme")
-        popup.configure(fg_color=TV_PANEL)
+        popup.configure(fg_color=TV_BG)
         popup.resizable(False, False)
         popup.transient(self)
         popup.grab_set()
 
+        # Green top accent
+        ctk.CTkFrame(popup, height=6, fg_color=TV_GREEN, corner_radius=0).pack(fill="x")
+
+        # X button
         ctk.CTkButton(
             popup, text="✕", width=32, height=32,
             fg_color=TV_PANEL_ALT, hover_color="#FF4444",
@@ -199,20 +185,32 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
             command=popup.destroy,
         ).pack(anchor="ne", padx=8, pady=(8, 0))
 
+        # Top text
         ctk.CTkLabel(
-            popup, text=title, wraplength=420,
-            font=FONT_LABEL, text_color=TV_SUBTEXT,
-        ).pack(padx=16, pady=(0, 8))
+            popup, text=top, wraplength=380,
+            font=("Impact", 36) if True else FONT_BOLD,
+            text_color=TV_TEXT,
+        ).pack(padx=24, pady=(16, 8))
 
-        photo = ImageTk.PhotoImage(img)
-        lbl = tk.Label(popup, image=photo, bg=TV_PANEL, bd=0)
-        lbl.image = photo
-        lbl.pack(padx=16, pady=(0, 16))
+        # Divider
+        ctk.CTkFrame(popup, height=2, fg_color=TV_PANEL_ALT, corner_radius=0).pack(fill="x", padx=24)
 
-        self.update_idletasks()
-        px = self.winfo_x() + (self.winfo_width() - img.width) // 2
-        py = self.winfo_y() + (self.winfo_height() - img.height) // 2
-        popup.geometry(f"+{px}+{py}")
+        # Bottom text
+        ctk.CTkLabel(
+            popup, text=bottom, wraplength=380,
+            font=("Impact", 32) if True else FONT_BOLD,
+            text_color=TV_GREEN,
+        ).pack(padx=24, pady=(8, 24))
+
+        # Green bottom accent
+        ctk.CTkFrame(popup, height=6, fg_color=TV_GREEN, corner_radius=0).pack(fill="x")
+
+        popup.update_idletasks()
+        pw = popup.winfo_reqwidth()
+        ph = popup.winfo_reqheight()
+        px = self.winfo_x() + (self.winfo_width() - pw) // 2
+        py = self.winfo_y() + (self.winfo_height() - ph) // 2
+        popup.geometry(f"{pw}x{ph}+{px}+{py}")
 
     # ── Header ─────────────────────────────────────────────────────────────
 
