@@ -6,96 +6,204 @@ import customtkinter as ctk
 
 from anonymizer import anonymize, deanonymize, Lexicon
 
-ctk.set_appearance_mode("System")
-ctk.set_default_color_theme("blue")
+# ── Telavox brand palette ──────────────────────────────────────────────────
+TV_GREEN       = "#2EC266"
+TV_GREEN_HOVER = "#25A556"
+TV_BG          = "#1A1E2C"
+TV_PANEL       = "#242838"
+TV_PANEL_ALT   = "#2C3146"
+TV_TEXT        = "#FFFFFF"
+TV_SUBTEXT     = "#9AA0B4"
+TV_ROW_A       = "#262B3C"
+TV_ROW_B       = "#2A3050"
+
+ctk.set_appearance_mode("Dark")
+ctk.set_default_color_theme("green")
+
+FONT_BODY   = ("Inter", 13)
+FONT_LABEL  = ("Inter", 12)
+FONT_BOLD   = ("Inter", 13, "bold")
+FONT_TITLE  = ("Inter", 22, "bold")
+
+
+def green_btn(parent, text, command, width=160, state="normal"):
+    return ctk.CTkButton(
+        parent,
+        text=text,
+        command=command,
+        width=width,
+        height=36,
+        state=state,
+        font=FONT_BOLD,
+        fg_color=TV_GREEN,
+        hover_color=TV_GREEN_HOVER,
+        text_color=TV_TEXT,
+        corner_radius=8,
+    )
+
+
+def ghost_btn(parent, text, command, width=160, state="normal"):
+    return ctk.CTkButton(
+        parent,
+        text=text,
+        command=command,
+        width=width,
+        height=36,
+        state=state,
+        font=FONT_LABEL,
+        fg_color=TV_PANEL_ALT,
+        hover_color=TV_PANEL,
+        text_color=TV_TEXT,
+        border_width=1,
+        border_color=TV_GREEN,
+        corner_radius=8,
+    )
 
 
 class App(ctk.CTk):
     def __init__(self):
-        super().__init__()
-        self.title("Log Anonymizer")
-        self.geometry("740x580")
-        self.minsize(540, 440)
+        super().__init__(fg_color=TV_BG)
+        self.title("Telavox — Log Anonymizer")
+        self.geometry("800x620")
+        self.minsize(600, 480)
 
         self._output_text = None
         self._selected_file = None
         self._lexicon = Lexicon()
 
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
 
-        tabs = ctk.CTkTabview(self)
-        tabs.grid(row=0, column=0, sticky="nsew", padx=16, pady=16)
+        self._build_header()
+        self._build_tabs()
 
-        tabs.add("Anonymisera fil")
-        tabs.add("Återskapa original")
+    # ── Header ─────────────────────────────────────────────────────────────
 
-        self._build_anonymize_tab(tabs.tab("Anonymisera fil"))
-        self._build_restore_tab(tabs.tab("Återskapa original"))
+    def _build_header(self):
+        header = ctk.CTkFrame(self, fg_color=TV_PANEL, corner_radius=0, height=64)
+        header.grid(row=0, column=0, sticky="ew")
+        header.grid_propagate(False)
+        header.grid_columnconfigure(1, weight=1)
 
-    # ------------------------------------------------------------------ #
-    #  Tab 1 — Anonymisera fil
-    # ------------------------------------------------------------------ #
+        dot = ctk.CTkFrame(header, width=10, height=10, fg_color=TV_GREEN, corner_radius=5)
+        dot.grid(row=0, column=0, padx=(20, 8), pady=20)
+
+        ctk.CTkLabel(
+            header,
+            text="Log Anonymizer",
+            font=FONT_TITLE,
+            text_color=TV_TEXT,
+            anchor="w",
+        ).grid(row=0, column=1, sticky="w")
+
+        ctk.CTkLabel(
+            header,
+            text="Ingen data lämnar din maskin",
+            font=FONT_LABEL,
+            text_color=TV_SUBTEXT,
+            anchor="e",
+        ).grid(row=0, column=2, padx=20, sticky="e")
+
+    # ── Tabs ───────────────────────────────────────────────────────────────
+
+    def _build_tabs(self):
+        tabs = ctk.CTkTabview(
+            self,
+            fg_color=TV_PANEL,
+            segmented_button_fg_color=TV_PANEL_ALT,
+            segmented_button_selected_color=TV_GREEN,
+            segmented_button_selected_hover_color=TV_GREEN_HOVER,
+            segmented_button_unselected_color=TV_PANEL_ALT,
+            segmented_button_unselected_hover_color=TV_PANEL,
+            text_color=TV_TEXT,
+            corner_radius=12,
+        )
+        tabs.grid(row=1, column=0, sticky="nsew", padx=20, pady=20)
+
+        tabs.add("  Anonymisera fil  ")
+        tabs.add("  Återskapa original  ")
+
+        self._build_anonymize_tab(tabs.tab("  Anonymisera fil  "))
+        self._build_restore_tab(tabs.tab("  Återskapa original  "))
+
+    # ── Tab 1 — Anonymisera fil ────────────────────────────────────────────
 
     def _build_anonymize_tab(self, parent):
+        parent.configure(fg_color=TV_PANEL)
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(2, weight=1)
 
-        file_frame = ctk.CTkFrame(parent)
-        file_frame.grid(row=0, column=0, sticky="ew", pady=(12, 6))
-        file_frame.grid_columnconfigure(0, weight=1)
+        # File picker card
+        card = ctk.CTkFrame(parent, fg_color=TV_PANEL_ALT, corner_radius=10)
+        card.grid(row=0, column=0, sticky="ew", pady=(8, 6))
+        card.grid_columnconfigure(0, weight=1)
 
         self._file_label = ctk.CTkLabel(
-            file_frame, text="Ingen fil vald", anchor="w", text_color="gray"
+            card,
+            text="Välj en loggfil för att börja",
+            anchor="w",
+            font=FONT_BODY,
+            text_color=TV_SUBTEXT,
         )
-        self._file_label.grid(row=0, column=0, sticky="ew", padx=12, pady=10)
+        self._file_label.grid(row=0, column=0, sticky="ew", padx=16, pady=14)
 
-        ctk.CTkButton(
-            file_frame, text="Välj fil…", width=110, command=self._browse
-        ).grid(row=0, column=1, padx=(0, 10), pady=10)
-
-        action_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        action_frame.grid(row=1, column=0, sticky="ew", pady=4)
-        action_frame.grid_columnconfigure(1, weight=1)
-
-        self._run_btn = ctk.CTkButton(
-            action_frame,
-            text="Anonymisera",
-            width=140,
-            state="disabled",
-            command=self._start,
+        ghost_btn(card, "Välj fil…", self._browse, width=120).grid(
+            row=0, column=1, padx=(0, 12), pady=12
         )
-        self._run_btn.grid(row=0, column=0, padx=(0, 12))
 
-        self._progress = ctk.CTkProgressBar(action_frame)
+        # Action row
+        action = ctk.CTkFrame(parent, fg_color="transparent")
+        action.grid(row=1, column=0, sticky="ew", pady=(0, 8))
+        action.grid_columnconfigure(1, weight=1)
+
+        self._run_btn = green_btn(action, "Anonymisera", self._start, width=150, state="disabled")
+        self._run_btn.grid(row=0, column=0, padx=(0, 14))
+
+        self._progress = ctk.CTkProgressBar(
+            action,
+            height=8,
+            corner_radius=4,
+            fg_color=TV_PANEL_ALT,
+            progress_color=TV_GREEN,
+        )
         self._progress.grid(row=0, column=1, sticky="ew")
         self._progress.set(0)
 
-        self._anon_status = ctk.CTkLabel(action_frame, text="", anchor="e", width=180)
-        self._anon_status.grid(row=0, column=2, padx=(12, 0))
+        self._anon_status = ctk.CTkLabel(
+            action, text="", anchor="e", width=200, font=FONT_LABEL, text_color=TV_SUBTEXT
+        )
+        self._anon_status.grid(row=0, column=2, padx=(14, 0))
 
-        self._table = ctk.CTkScrollableFrame(parent, label_text="Anonymiserade värden")
-        self._table.grid(row=2, column=0, sticky="nsew", pady=8)
+        # Results table
+        self._table = ctk.CTkScrollableFrame(
+            parent,
+            label_text="Anonymiserade värden",
+            label_font=FONT_BOLD,
+            label_text_color=TV_SUBTEXT,
+            fg_color=TV_PANEL_ALT,
+            corner_radius=10,
+            scrollbar_button_color=TV_PANEL,
+            scrollbar_button_hover_color=TV_GREEN,
+        )
+        self._table.grid(row=2, column=0, sticky="nsew", pady=(0, 8))
         self._table.grid_columnconfigure((0, 1, 2), weight=1)
         self._build_table_header()
 
-        self._save_btn = ctk.CTkButton(
-            parent,
-            text="Spara anonymiserad fil…",
-            state="disabled",
-            command=self._save,
-        )
+        # Save button
+        self._save_btn = ghost_btn(parent, "Spara anonymiserad fil…", self._save, width=220, state="disabled")
         self._save_btn.grid(row=3, column=0, pady=(4, 12))
 
     def _browse(self):
+        self.update()
         path = fd.askopenfilename(
-            filetypes=[("Loggfiler", "*.log *.txt *.csv"), ("Alla filer", "*.*")]
+            parent=self,
+            filetypes=[("Loggfiler", "*.log *.txt *.csv"), ("Alla filer", "*.*")],
         )
         if not path:
             return
         self._selected_file = path
         self._file_label.configure(
-            text=os.path.basename(path), text_color=("gray10", "gray90")
+            text=f"  {os.path.basename(path)}", text_color=TV_TEXT
         )
         self._run_btn.configure(state="normal")
         self._save_btn.configure(state="disabled")
@@ -129,7 +237,9 @@ class App(ctk.CTk):
 
     def _on_done(self, entries):
         self._progress.set(1.0)
-        self._anon_status.configure(text=f"{len(entries)} värden ersatta")
+        self._anon_status.configure(
+            text=f"{len(entries)} värden ersatta", text_color=TV_GREEN
+        )
         self._run_btn.configure(state="normal")
         self._save_btn.configure(state="normal")
         self._populate_table(entries)
@@ -139,32 +249,46 @@ class App(ctk.CTk):
             ctk.CTkLabel(
                 self._table,
                 text=title,
-                font=ctk.CTkFont(weight="bold"),
+                font=FONT_BOLD,
                 anchor="w",
-            ).grid(row=0, column=col, sticky="ew", padx=8, pady=(4, 2))
+                text_color=TV_SUBTEXT,
+            ).grid(row=0, column=col, sticky="ew", padx=10, pady=(6, 4))
 
     def _clear_table(self):
-        for widget in self._table.winfo_children():
-            widget.destroy()
+        for w in self._table.winfo_children():
+            w.destroy()
         self._build_table_header()
 
     def _populate_table(self, entries):
+        TYPE_LABELS = {
+            "phone": "Telefon",
+            "email": "E-post",
+            "personnummer": "Personnummer",
+            "ip_address": "IP-adress",
+            "ipv6": "IPv6",
+        }
         for i, e in enumerate(entries, start=1):
-            bg = ("gray92", "gray18") if i % 2 == 0 else ("gray96", "gray16")
-            for col, val in enumerate([e["type"], e["original"], e["replacement"]]):
+            bg = TV_ROW_B if i % 2 == 0 else TV_ROW_A
+            for col, val in enumerate(
+                [TYPE_LABELS.get(e["type"], e["type"]), e["original"], e["replacement"]]
+            ):
                 ctk.CTkLabel(
                     self._table,
                     text=val,
                     anchor="w",
                     fg_color=bg,
+                    font=FONT_LABEL,
+                    text_color=TV_TEXT,
                     corner_radius=4,
-                ).grid(row=i, column=col, sticky="ew", padx=4, pady=1)
+                ).grid(row=i, column=col, sticky="ew", padx=3, pady=1)
 
     def _save(self):
         if not self._output_text:
             return
+        self.update()
         base, ext = os.path.splitext(self._selected_file)
         path = fd.asksaveasfilename(
+            parent=self,
             defaultextension=ext or ".log",
             initialfile=os.path.basename(base) + "_anonymized" + (ext or ".log"),
             filetypes=[("Loggfiler", "*.log *.txt *.csv"), ("Alla filer", "*.*")],
@@ -172,13 +296,12 @@ class App(ctk.CTk):
         if path:
             with open(path, "w", encoding="utf-8") as f:
                 f.write(self._output_text)
-            self._anon_status.configure(text="Sparad ✓")
+            self._anon_status.configure(text="Sparad ✓", text_color=TV_GREEN)
 
-    # ------------------------------------------------------------------ #
-    #  Tab 2 — Återskapa original
-    # ------------------------------------------------------------------ #
+    # ── Tab 2 — Återskapa original ─────────────────────────────────────────
 
     def _build_restore_tab(self, parent):
+        parent.configure(fg_color=TV_PANEL)
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(1, weight=1)
         parent.grid_rowconfigure(4, weight=1)
@@ -187,32 +310,50 @@ class App(ctk.CTk):
             parent,
             text="Klistra in text med anonymiserade värden (t.ex. ett svar från Claude):",
             anchor="w",
-        ).grid(row=0, column=0, sticky="ew", pady=(12, 4))
+            font=FONT_LABEL,
+            text_color=TV_SUBTEXT,
+        ).grid(row=0, column=0, sticky="ew", pady=(10, 4))
 
-        self._restore_input = ctk.CTkTextbox(parent)
+        self._restore_input = ctk.CTkTextbox(
+            parent,
+            fg_color=TV_PANEL_ALT,
+            text_color=TV_TEXT,
+            font=FONT_BODY,
+            corner_radius=10,
+            border_width=1,
+            border_color=TV_PANEL_ALT,
+        )
         self._restore_input.grid(row=1, column=0, sticky="nsew", pady=(0, 8))
 
         btn_row = ctk.CTkFrame(parent, fg_color="transparent")
         btn_row.grid(row=2, column=0, sticky="ew", pady=4)
         btn_row.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkButton(
-            btn_row,
-            text="Återskapa original",
-            width=180,
-            command=self._restore,
-        ).grid(row=0, column=0)
+        green_btn(btn_row, "Återskapa original", self._restore, width=200).grid(row=0, column=0)
 
-        self._restore_status = ctk.CTkLabel(btn_row, text="", anchor="w")
-        self._restore_status.grid(row=0, column=1, padx=12)
+        self._restore_status = ctk.CTkLabel(
+            btn_row, text="", anchor="w", font=FONT_LABEL, text_color=TV_SUBTEXT
+        )
+        self._restore_status.grid(row=0, column=1, padx=14)
 
         ctk.CTkLabel(
             parent,
             text="Text med återställda originalvärden:",
             anchor="w",
+            font=FONT_LABEL,
+            text_color=TV_SUBTEXT,
         ).grid(row=3, column=0, sticky="ew", pady=(8, 4))
 
-        self._restore_output = ctk.CTkTextbox(parent, state="disabled")
+        self._restore_output = ctk.CTkTextbox(
+            parent,
+            fg_color=TV_PANEL_ALT,
+            text_color=TV_TEXT,
+            font=FONT_BODY,
+            corner_radius=10,
+            border_width=1,
+            border_color=TV_PANEL_ALT,
+            state="disabled",
+        )
         self._restore_output.grid(row=4, column=0, sticky="nsew", pady=(0, 12))
 
     def _restore(self):
@@ -230,7 +371,7 @@ class App(ctk.CTk):
         self._restore_output.delete("1.0", "end")
         self._restore_output.insert("1.0", result)
         self._restore_output.configure(state="disabled")
-        self._restore_status.configure(text="Klart ✓")
+        self._restore_status.configure(text="Klart ✓", text_color=TV_GREEN)
 
 
 if __name__ == "__main__":
