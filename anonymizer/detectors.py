@@ -8,7 +8,7 @@ _MAC_PATTERN = re.compile(
 
 PATTERNS = {
     "personnummer": re.compile(
-        r"\b(\d{6}[-+]\d{4}|\d{8}[-+]\d{4}|\d{10}|\d{12})\b"
+        r"\b(?:19|20)\d{6}(?:[-+]\d{4}|\d{4})\b"
     ),
     "email": re.compile(
         r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b"
@@ -33,6 +33,8 @@ def find_matches(text):
     for entity_type, pattern in PATTERNS.items():
         for m in pattern.finditer(text):
             if _overlaps_mac(m.start(), m.end(), mac_ranges):
+                continue
+            if entity_type == "email" and re.search(r'@sip\b', m.group(), re.IGNORECASE):
                 continue
             matches.append((m.start(), m.end(), entity_type, m.group()))
     matches.sort(key=lambda x: x[0])

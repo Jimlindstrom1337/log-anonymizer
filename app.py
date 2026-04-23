@@ -151,7 +151,8 @@ class App(ctk.CTk):
     def _populate_table(self, entries):
         for i, e in enumerate(entries, start=1):
             bg = ("gray92", "gray18") if i % 2 == 0 else ("gray96", "gray16")
-            for col, val in enumerate([e["type"], e["original"], e["replacement"]]):
+            type_display = e["replacement"].strip("[]")
+            for col, val in enumerate([type_display, e["original"], e["replacement"]]):
                 ctk.CTkLabel(
                     self._table,
                     text=val,
